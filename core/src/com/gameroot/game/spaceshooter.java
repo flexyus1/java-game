@@ -24,11 +24,11 @@ public class spaceshooter extends ApplicationAdapter {
 	SpriteBatch batch;
 	Texture img, tNave, tMissile, tEnemy;
 	private Sprite nave, missile;
-	private float posX, posY, velocity, xMissile, yMissile;
+	private float posX, posY, velocity, xMissile, yMissile, enemySpeed;
 	private boolean attack, gameover;
 	private Array <Rectangle> enemies;
 	private long lastEnemyTime;
-	private int score, life;
+	private int score, life, numEnemies;
 
 	private FreeTypeFontGenerator generator;
 	private FreeTypeFontGenerator.FreeTypeFontParameter parameter;
@@ -44,6 +44,7 @@ public class spaceshooter extends ApplicationAdapter {
 		posX = 0;
 		posY = 0;
 		velocity = 10;
+		enemySpeed = 4.5f;
 	
 
 		tMissile = new Texture("missile.png");
@@ -58,6 +59,7 @@ public class spaceshooter extends ApplicationAdapter {
 
 		score = 0;
 		life = 3;
+		numEnemies = 799999999;
 		
 		generator = new FreeTypeFontGenerator((Gdx.files.internal("font.ttf")));
 		parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
@@ -87,13 +89,23 @@ public class spaceshooter extends ApplicationAdapter {
         batch.draw(missile, xMissile, yMissile);
       }
 			batch.draw(nave, posX, posY);
-		for(Rectangle enemy : enemies){
-		batch.draw(tEnemy, enemy.x, enemy.y);
-		}
+				for(Rectangle enemy : enemies){
+				batch.draw(tEnemy, enemy.x, enemy.y);
+			}
+					bitmap.draw(batch, "Score: " + score, 20, Gdx.graphics.getHeight() - 20);
+					bitmap.draw(batch, "Life: " + life, Gdx.graphics.getWidth() - 150, Gdx.graphics.getHeight() - 20 );
 	}else{
 		bitmap.draw(batch, "Score: " + score, 20, Gdx.graphics.getHeight() - 20);
-		bitmap.draw(batch, "GAME OVER " + life, Gdx.graphics.getWidth() - 150, Gdx.graphics.getHeight() - 20 );
-		
+		bitmap.draw(batch, "GAME OVER ", Gdx.graphics.getWidth() - 150, Gdx.graphics.getHeight() - 20 );
+
+			if(Gdx.input.isKeyPressed(Input.Keys.ENTER)){
+				score = 0;
+				life = 3;
+				posX = 0;
+				posY = 0;
+				gameover = false;
+
+			}
 	}
 	batch.end();
 		
@@ -160,7 +172,7 @@ public class spaceshooter extends ApplicationAdapter {
 	}
 
 	private void moveEnemies(){
-		if(TimeUtils.nanoTime() - lastEnemyTime > 1000000000){
+		if(TimeUtils.nanoTime() - lastEnemyTime > numEnemies){
 			this.spawnEnemies();
 		} 
 		
@@ -168,10 +180,14 @@ public class spaceshooter extends ApplicationAdapter {
 		for(Iterator <Rectangle> iter = enemies.iterator(); iter.hasNext();){
 
 			Rectangle enemy = iter.next();
-			enemy.x -= 4.5;
+			enemy.x -= enemySpeed;
 
 			if(collide(enemy.x, enemy.y, enemy.width, enemy.height, xMissile, yMissile, missile.getWidth(), missile.getHeight()) && attack ){
 				++score;
+				if(score % 10 == 0){
+					numEnemies -= 10000;
+					enemySpeed += 0.3f;
+				}
 				attack = false;
 				iter.remove();
 			}
